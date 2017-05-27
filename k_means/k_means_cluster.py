@@ -36,18 +36,66 @@ def Draw(pred, features, poi, mark_poi=False, name="image.png", f1_name="feature
     plt.savefig(name)
     plt.show()
 
-
+def featureScaling(arr):
+    new_data = []
+    sort_arr = arr
+    sort_arr.sort()
+    min_arr = sort_arr[0]
+    max_arr = sort_arr[-1]
+    if min_arr==max_arr:
+        return [0.5]*len(arr)
+    else:
+        for i in arr:
+            new_data.append((i-min_arr)*1.0/(max_arr-min_arr))
+        return new_data
 
 ### load in the dict of dicts containing all the data on each person in the dataset
 data_dict = pickle.load( open("../final_project/final_project_dataset.pkl", "r") )
 ### there's an outlier--remove it! 
 data_dict.pop("TOTAL", 0)
 
+### return min and max value of exercised_stock_options
+min_stock = 0
+max_stock = 0
+for data in data_dict:
+	curr_stock = data_dict[data]['exercised_stock_options']
+	if curr_stock!='NaN':
+		if min_stock==0:
+			min_stock = curr_stock
+		elif min_stock>curr_stock:
+			min_stock = curr_stock
+		if max_stock ==0:
+			max_stock = curr_stock
+		elif max_stock<curr_stock:
+			max_stock = curr_stock
+print min_stock
+print max_stock
+print (1000000-min_stock)*1.0/(max_stock-min_stock)
+
+### return min and max value of salary
+min_salary = 0
+max_salary = 0
+for data in data_dict:
+	curr_salary = data_dict[data]['salary']
+	if curr_salary!='NaN':
+		if min_salary==0:
+			min_salary = curr_salary
+		elif min_salary>curr_salary:
+			min_salary = curr_salary
+		if max_salary ==0:
+			max_salary = curr_salary
+		elif max_salary<curr_salary:
+			max_salary = curr_salary
+print min_salary
+print max_salary
+print (200000-min_salary)*1.0/(max_salary-min_salary)
+
 
 ### the input features we want to use 
 ### can be any key in the person-level dictionary (salary, director_fees, etc.) 
 feature_1 = "salary"
 feature_2 = "exercised_stock_options"
+# feature_3 = "total_payments"
 poi  = "poi"
 features_list = [poi, feature_1, feature_2]
 data = featureFormat(data_dict, features_list )
@@ -64,7 +112,11 @@ plt.show()
 
 ### cluster here; create predictions of the cluster labels
 ### for the data and store them to a list called pred
-
+from sklearn.preprocessing import MinMaxScaler
+min_max_scaler = MinMaxScaler()
+finance_features_scalered = min_max_scaler.fit_transform(finance_features)
+from sklearn.cluster import KMeans
+pred = KMeans(n_clusters=2).fit_predict(finance_features_scalered)
 
 
 
